@@ -5,23 +5,18 @@ import { environment } from '@environments/environment';
 import { User } from '@models/user.model';
 import { checkToken } from '@interceptors/token.interceptor';
 import { Board } from '@models/board.model';
+import { Card, UpdateCardDto } from '@models/card.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class MeService {
+export class CardService {
   apiUrl = environment.API_URL;
 
   constructor(private http: HttpClient) {}
 
-  getMeProfile() {
-    return this.http.get<User>(`${this.apiUrl}/api/v1/me/profile`, {
-      context: checkToken(),
-    });
-  }
-
-  getMeBoards() {
-    return this.http.get<Board[]>(`${this.apiUrl}/api/v1/me/boards`, {
+  update(id: Card['id'], changes: UpdateCardDto) {
+    return this.http.put<Card>(`${this.apiUrl}/api/v1/cards/${id}`, changes, {
       context: checkToken(),
     });
   }

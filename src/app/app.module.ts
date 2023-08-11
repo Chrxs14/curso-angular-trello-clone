@@ -6,10 +6,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { TokenInterceptor } from '@interceptors/token.interceptor';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { BoardFormComponent } from './modules/layout.components/board-form/board-form.component';
 
 @NgModule({
   declarations: [
     AppComponent,
+    BoardFormComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   CdkDragDrop,
   moveItemInArray,
@@ -7,7 +8,12 @@ import {
 import { Dialog } from '@angular/cdk/dialog';
 import { TodoDialogComponent } from '@boards/components/todo-dialog/todo-dialog.component';
 
-import { ToDo, Column } from '@models/todo.model';
+import { Card } from '@models/card.model';
+import { BoardsService } from '@services/boards.service';
+import { Board } from '@models/board.model';
+import { __param } from 'tslib';
+import { CardService } from '@services/cards.service';
+import { checkToken } from '@interceptors/token.interceptor';
 
 @Component({
   selector: 'app-board',
@@ -23,44 +29,26 @@ import { ToDo, Column } from '@models/todo.model';
     `,
   ],
 })
-export class BoardComponent {
-  columns: Column[] = [
-    {
-      title: 'ToDo',
-      todos: [
-        {
-          id: '1',
-          title: 'Make dishes',
-        },
-        {
-          id: '2',
-          title: 'Buy a unicorn',
-        },
-      ],
-    },
-    {
-      title: 'Doing',
-      todos: [
-        {
-          id: '3',
-          title: 'Watch Angular Path in Platzi',
-        },
-      ],
-    },
-    {
-      title: 'Done',
-      todos: [
-        {
-          id: '4',
-          title: 'Play video games',
-        },
-      ],
-    },
-  ];
+export class BoardComponent implements OnInit {
+  board: Board | null = null;
 
-  constructor(private dialog: Dialog) {}
+  constructor(
+    private dialog: Dialog,
+    private route: ActivatedRoute,
+    private boardsServices: BoardsService,
+    private cardServices: CardService
+  ) {}
 
-  drop(event: CdkDragDrop<ToDo[]>) {
+  ngOnInit() {
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('boardId');
+      if (id) {
+        this.getBoard(id);
+      }
+    });
+  }
+
+  drop(event: CdkDragDrop<Card[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(
         event.container.data,
@@ -75,21 +63,33 @@ export class BoardComponent {
         event.currentIndex
       );
     }
+    const rta = this.boardsServices.getPosition(
+      event.container.data,
+      event.currentIndex
+    );
+    const position = this.boardsServices.getPosition(
+      event.container.data,
+      event.currentIndex
+    );
+    const card = event.container.data[event.currentIndex];
+    const listId = event.container.id;
+    this.updateCard(card, position, listId);
+    console.log(rta);
   }
 
   addColumn() {
-    this.columns.push({
-      title: 'New Column',
-      todos: [],
-    });
+    // this.columns.push({
+    //   title: 'New Column',
+    //   todos: [],
+    // });
   }
 
-  openDialog(todo: ToDo) {
+  openDialog(card: Card) {
     const dialogRef = this.dialog.open(TodoDialogComponent, {
       minWidth: '300px',
       maxWidth: '50%',
       data: {
-        todo: todo,
+        card: card,
       },
     });
     dialogRef.closed.subscribe((output) => {
@@ -97,5 +97,18 @@ export class BoardComponent {
         console.log(output);
       }
     });
+  }
+  private getBoard(id: string) {
+    this.boardsServices.getBoards(id).subscribe((board) => {
+      this.board = board;
+    });
+  }
+
+  private updateCard(card: Card, position: number, listId: number | string) {
+    this.cardServices
+      .update(card.id, { position, listId })
+      .subscribe((cardpdated) => {
+        console.log(cardpdated);
+      });
   }
 }
